@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MozMarket - Compre e Venda em Moçambique</title>
+  <meta name="description" content="Marketplace para comprar e vender em Moçambique">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="stylesheet" href="/css/style.css">
+  <!-- Favicon para diversos dispositivos -->
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/logo-192.png">
+  <link rel="apple-touch-icon" href="/images/logo-192.png">
+  <meta name="theme-color" content="#2E86C1">
+</head>
+<body>
+  <header>
+    <img src="/images/logo-192.png" alt="MozMarket" class="logo">
+    <h1>MozMarket</h1>
+    <button id="installBtn" class="hidden">Instalar App</button>
+  </header>
+
+  <main>
+    <section class="search">
+      <input type="text" placeholder="O que procura hoje?">
+      <button>Buscar</button>
+    </section>
+
+    <section class="categories">
+      <h2>Categorias</h2>
+      <div class="category-grid">
+        <div class="category-item">Telemóveis</div>
+        <div class="category-item">Eletrónicos</div>
+        <div class="category-item">Moda</div>
+        <div class="category-item">Casa</div>
+        <div class="category-item">Automóveis</div>
+        <div class="category-item">Serviços</div>
+      </div>
+    </section>
+
+    <section class="featured-products">
+      <h2>Produtos em Destaque</h2>
+      <div class="product-grid" id="productContainer">
+        <!-- Produtos serão carregados via JavaScript -->
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>© 2023 MozMarket - Todos direitos reservados</p>
+  </footer>
+
+  <script src="/js/app.js"></script>
+</body>
+</html>
+
+:root {
+  --primary-color: #2E86C1;
+  --secondary-color: #F1C40F;
+  --dark-color: #1B2631;
+  --light-color: #F8F9F9;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+  background-color: var(--light-color);
+  color: var(--dark-color);
+  line-height: 1.6;
+}
+
+header {
+  background-color: var(--primary-color);
+  color: white;
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.logo {
+  width: 40px;
+  height: 40px;
+}
+
+.search {
+  padding: 1rem;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.search input {
+  flex: 1;
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.search button {
+  padding: 0.5rem 1rem;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 4px;
+}
+
+.categories, .featured-products {
+  padding: 1rem;
+}
+
+.category-grid, .product-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.category-item {
+  background-color: white;
+  padding: 1rem;
+  border-radius: 8px;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.hidden {
+  display: none;
+}
+
+/* Estilos para telas maiores */
+@media (min-width: 768px) {
+  .category-grid, .product-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+// Registro do Service Worker
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then(registration => {
+        console.log('ServiceWorker registrado com sucesso');
+      })
+      .catch(err => {
+        console.log('ServiceWorker falhou:', err);
+      });
+  });
+}
+
+// Lógica para instalação do PWA
+let deferredPrompt;
+const installBtn = document.getElementById('installBtn');
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  installBtn.classList.remove('hidden');
+});
+
+installBtn.addEventListener('click', () => {
+  if (deferredPrompt) {
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then((choiceResult) => {
+      if (choiceResult.outcome === 'accepted') {
+        console.log('Usuário aceitou instalar');
+      }
+      deferredPrompt = null;
+    });
+  }
+});
+
+// Carregar produtos (exemplo)
+document.addEventListener('DOMContentLoaded', () => {
+  const products = [
+    { id: 1, name: "iPhone 11", price: "25.000 MT", location: "Maputo" },
+    { id: 2, name: "Samsung Galaxy S20", price: "30.000 MT", location: "Beira" },
+    { id: 3, name: "TV LG 42 Polegadas", price: "18.000 MT", location: "Nampula" },
+    { id: 4, name: "Portátil HP", price: "35.000 MT", location: "Maputo" }
+  ];
+
+  const productContainer = document.getElementById('productContainer');
+  
+  products.forEach(product => {
+    const productElement = document.createElement('div');
+    productElement.className = 'category-item';
+    productElement.innerHTML = `
+      <h3>${product.name}</h3>
+      <p class="price">${product.price}</p>
+      <p class="location">${product.location}</p>
+    `;
+    productContainer.appendChild(productElement);
+  });
+});
+
+const CACHE_NAME = 'mozmarket-v1';
+const urlsToCache = [
+  '/',
+  '/index.html',
+  '/css/style.css',
+  '/js/app.js',
+  '/images/logo-192.png',
+  '/images/logo-512.png'
+];
+
+self.addEventListener('install', event => {
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then(cache => {
+        return cache.addAll(urlsToCache);
+      })
+  );
+});
+
+self.addEventListener('fetch', event => {
+  event.respondWith(
+    caches.match(event.request)
+      .then(response => {
+        return response || fetch(event.request);
+      })
+  );
+});
+
+{
+  "name": "MozMarket",
+  "short_name": "MozMarket",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#2E86C1",
+  "theme_color": "#2E86C1",
+  "description": "Marketplace para comprar e vender em Moçambique",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/images/logo-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/images/logo-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
+
